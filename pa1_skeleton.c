@@ -142,7 +142,9 @@ int ls(char *dir_path, char *option) {
     struct dirent *entry;
     DIR *dp = opendir(dir_path ? dir_path : ".");
     if (!dp) {
-        perror("ERROR: invalid path");
+        return -1;
+    }
+    if(option && stringcmp(option, "-al") != 0) {
         return -1;
     }
 
