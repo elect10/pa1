@@ -1,0 +1,9 @@
+total 24
+drwxrwxr-x 2 501 dialout 4096 Oct 13 20:56 .
+drwxr-xr-x 7 501 dialout 4096 Oct 26 09:33 ..
+-rw-rw-r-- 1 501 dialout   15 Oct 13 20:56 a.txt
+-rw-rw-r-- 1 501 dialout   14 Oct 13 20:56 b.txt
+-rw-rw-r-- 1 501 dialout    0 Oct 13 20:56 c.txt
+-rw-rw-r-- 1 501 dialout    0 Oct 13 20:56 d.txt
+-rw-rw-r-- 1 501 dialout  626 Oct 13 20:56 e.sh
+-rw-rw-r-- 1 501 dialout 3198 Oct 13 20:56 example.bash

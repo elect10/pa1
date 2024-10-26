@@ -1,0 +1,7 @@
+
+
+echo "" >> "$output_file"
+echo "당신의 꿈을 위해 계속 나아가세요!" >> "$output_file"
+echo "응원의 메시지가 담긴 파일이 생성되었습니다: $output_file"
+
+answer1.txt answer2.txt answer3.txt answer4.txt answer5.txt answer6.txt answer7.txt answer8.txt answer9.txt final_e.sh renamed_e.sh

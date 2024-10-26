@@ -1,0 +1,5 @@
+
+
+#!/bin/bash
+output_file="student_encouragement.txt"
+echo "안녕하세요, 학생 여러분!" > "$output_file"
