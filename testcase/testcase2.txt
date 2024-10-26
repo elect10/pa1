@@ -1,6 +1,6 @@
 total 24
 drwxrwxr-x 2 501 dialout 4096 Oct 13 20:56 .
-drwxr-xr-x 8 501 dialout 4096 Oct 26 09:44 ..
+drwxr-xr-x 8 501 dialout 4096 Oct 26 20:15 ..
 -rw-rw-r-- 1 501 dialout   15 Oct 13 20:56 a.txt
 -rw-rw-r-- 1 501 dialout   14 Oct 13 20:56 b.txt
 -rw-rw-r-- 1 501 dialout    0 Oct 13 20:56 c.txt

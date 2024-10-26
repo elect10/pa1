@@ -83,32 +83,40 @@ int main() {
     while (1) {
         int i, cmdrlt;
         char *cmd = NULL;
-        char *argument[10] = {NULL};
-        size_t size = 0;
+        char *argument[10];
+        size_t size;
+
+        
 
         getline(&cmd, &size, stdin);
-
+        
         i = 0;
         argument[i] = str_tok(cmd, " \n");
+
         while (argument[i] != NULL && i < 9) {
             argument[++i] = str_tok(NULL, " \n");
         }
-
-        if (stringcmp("ls", argument[0]) == 0) {
-            cmdrlt = ls(argument[1], argument[2]);
-        } else if (stringcmp("head", argument[0]) == 0) {
-            cmdrlt = head(argument[2], argument[1]);
-        } else if (stringcmp("tail", argument[0]) == 0) {
-            cmdrlt = tail(argument[2], argument[1]);
-        } else if (stringcmp("mv", argument[0]) == 0) {
-            cmdrlt = mv(argument[1], argument[2]);
-        } else if (stringcmp("cp", argument[0]) == 0) {
-            cmdrlt = cp(argument[1], argument[2]);
-        } else if (stringcmp("pwd", argument[0]) == 0) {
-            cmdrlt = pwd();
-        } else if (stringcmp("quit", argument[0]) == 0) {
-            break;
-        } else {
+        if (stringcmp("ls", argument[0]) == 0){
+			cmdrlt = ls(argument[1], argument[2]);		
+		}
+		else if (stringcmp("head", argument[0]) == 0){ // -n 명령어 아닐경우 예외처리?
+			cmdrlt = head(argument[3], argument[2]);
+		}
+		else if (stringcmp("tail", argument[0]) == 0){
+			cmdrlt = tail(argument[3], argument[2]);
+		}
+		else if (stringcmp("mv", argument[0]) == 0){
+			cmdrlt = mv(argument[1], argument[2]);
+		}
+		else if (stringcmp("cp", argument[0]) == 0){
+			cmdrlt = cp(argument[1], argument[2]);
+		}
+		else if (stringcmp("pwd", argument[0]) == 0){
+			cmdrlt = pwd();
+		}
+		else if (stringcmp("quit", argument[0]) == 0){
+			break;
+		} else {
             printf("ERROR: invalid command\n");
         }
 
@@ -237,13 +245,15 @@ int ls(char *dir_path, char *option) {
 }
 
 int head(char *file_path, char *line) {
+    // file_path 값 출력
+
     FILE *file = fopen(file_path, "r");
     if (!file) {
-        perror("ERROR: invalid path");
-        return -1;
+        printf("ERROR: invalid path\n");
+        return 0;
     }
 
-    int n = atoi(line + 2);
+    int n = atoi(line);
     char buffer[1024];
 
     for (int i = 0; i < n && fgets(buffer, sizeof(buffer), file); i++) {
@@ -256,35 +266,44 @@ int head(char *file_path, char *line) {
 int tail(char *file_path, char *line) {
     FILE *file = fopen(file_path, "r");
     if (!file) {
-        perror("ERROR: invalid path");
-        return -1;
+        printf("ERROR: invalid path\n");
+        return 0;
     }
 
-    int n = atoi(line + 2);
-    fseek(file, 0, SEEK_END);
-    long pos = ftell(file);
+    int n = atoi(line); // line으로부터 출력할 줄 수를 얻음
+    fseek(file, 0, SEEK_END); // 파일의 끝으로 이동
+    long pos = ftell(file); // 파일의 현재 위치를 얻음
 
     int line_count = 0;
-    while (pos && line_count < n) {
-        fseek(file, --pos, SEEK_SET);
+    // 파일 끝에서부터 역방향으로 읽으면서 n개의 줄을 찾음
+    while (pos > 0 && line_count <= n) {
+        fseek(file, --pos, SEEK_SET); // 한 바이트씩 왼쪽으로 이동
         if (fgetc(file) == '\n') {
-            line_count++;
+            line_count++; // 줄 개수 증가
         }
     }
-    if (pos) fseek(file, pos + 2, SEEK_SET);
 
+    // 찾은 위치로부터 파일을 읽기 시작함
+    if (pos > 0) {
+        fseek(file, pos + 1, SEEK_SET); // 파일의 첫 번째 문자를 포함하도록 조정
+    } else {
+        fseek(file, 0, SEEK_SET); // 파일 처음으로 이동
+    }
+
+    // 찾은 줄부터 파일 끝까지 출력
     char buffer[1024];
     while (fgets(buffer, sizeof(buffer), file)) {
         printf("%s", buffer);
     }
+
     fclose(file);
     return 0;
 }
 
 int mv(char *file_path1, char *file_path2) {
     if (rename(file_path1, file_path2) == -1) {
-        perror("ERROR: mv failed");
-        return -1;
+        printf("ERROR: invalid path\n");
+        return 0;
     }
     return 0;
 }
@@ -292,15 +311,15 @@ int mv(char *file_path1, char *file_path2) {
 int cp(char *file_path1, char *file_path2) {
     int src = open(file_path1, O_RDONLY);
     if (src == -1) {
-        perror("ERROR: invalid path");
-        return -1;
+        printf("ERROR: invalid path\n");
+        return 0;
     }
 
     int dest = open(file_path2, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (dest == -1) {
+        printf("ERROR: invalid path\n");
         close(src);
-        perror("ERROR: cp failed");
-        return -1;
+        return 0;
     }
 
     char buffer[1024];
@@ -320,7 +339,6 @@ int pwd() {
         printf("%s\n", cwd);
         return 0;
     } else {
-        perror("ERROR: pwd failed");
         return -1;
     }
 }
