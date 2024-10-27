@@ -99,7 +99,7 @@ int main() {
         if (stringcmp("ls", argument[0]) == 0){
 			cmdrlt = ls(argument[1], argument[2]);		
 		}
-		else if (stringcmp("head", argument[0]) == 0){ // -n 명령어 아닐경우 예외처리?
+		else if (stringcmp("head", argument[0]) == 0){ 
 			cmdrlt = head(argument[3], argument[2]);
 		}
 		else if (stringcmp("tail", argument[0]) == 0){
@@ -150,7 +150,8 @@ int ls(char *dir_path, char *option) {
     struct dirent *entry;
     DIR *dp = opendir(dir_path ? dir_path : ".");
     if (!dp) {
-        return -1;
+        printf("ERROR: invalid path\n");
+        return 0;
     }
     if(option && stringcmp(option, "-al") != 0) {
         return -1;
@@ -245,58 +246,83 @@ int ls(char *dir_path, char *option) {
 }
 
 int head(char *file_path, char *line) {
-    // file_path 값 출력
-
-    FILE *file = fopen(file_path, "r");
-    if (!file) {
+    int fd = open(file_path, O_RDONLY);
+    if (fd == -1) {
         printf("ERROR: invalid path\n");
         return 0;
     }
 
-    int n = atoi(line);
+    int n = atoi(line); // 줄 수 파싱
     char buffer[1024];
-
-    for (int i = 0; i < n && fgets(buffer, sizeof(buffer), file); i++) {
-        printf("%s", buffer);
-    }
-    fclose(file);
-    return 0;
-}
-
-int tail(char *file_path, char *line) {
-    FILE *file = fopen(file_path, "r");
-    if (!file) {
-        printf("ERROR: invalid path\n");
-        return 0;
-    }
-
-    int n = atoi(line); // line으로부터 출력할 줄 수를 얻음
-    fseek(file, 0, SEEK_END); // 파일의 끝으로 이동
-    long pos = ftell(file); // 파일의 현재 위치를 얻음
-
+    ssize_t bytes;
     int line_count = 0;
-    // 파일 끝에서부터 역방향으로 읽으면서 n개의 줄을 찾음
-    while (pos > 0 && line_count <= n) {
-        fseek(file, --pos, SEEK_SET); // 한 바이트씩 왼쪽으로 이동
-        if (fgetc(file) == '\n') {
-            line_count++; // 줄 개수 증가
+
+    while (line_count < n && (bytes = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[bytes] = '\0'; // NULL-terminate the buffer
+        char *buf_ptr = buffer;
+        while (*buf_ptr) {
+            if (line_count >= n) break;
+            putchar(*buf_ptr);
+            if (*buf_ptr++ == '\n') {
+                line_count++;
+            }
         }
     }
 
-    // 찾은 위치로부터 파일을 읽기 시작함
-    if (pos > 0) {
-        fseek(file, pos + 1, SEEK_SET); // 파일의 첫 번째 문자를 포함하도록 조정
-    } else {
-        fseek(file, 0, SEEK_SET); // 파일 처음으로 이동
+    close(fd);
+    return 0;
+}
+
+
+
+int tail(char *file_path, char *line) {
+    int fd = open(file_path, O_RDONLY); // Open the file for reading only.
+    if (fd == -1) {
+        perror("ERROR: invalid path");
+        return 1;
     }
 
-    // 찾은 줄부터 파일 끝까지 출력
+    int n = atoi(line); // Number of lines to output.
+    off_t pos = lseek(fd, 0, SEEK_END); // Move to the end of the file.
+    if (pos == -1) {
+        return -1;
+    }
+
+    int line_count = 0;
+    char c;
+
+    // Read backwards from the end of the file to find the nth line.
+    while (pos > 0 && line_count <= n) {
+        pos = lseek(fd, --pos, SEEK_SET); // Move one byte left.
+        if (pos == -1) {
+            return -1;
+        }
+
+        if (read(fd, &c, 1) != 1) {
+            return -1;
+        }
+
+        if (c == '\n') {
+            line_count++; // Increment the line count when a newline is found.
+        }
+    }
+
+    // Start reading from the found position.
+    if (pos > 0) {
+        lseek(fd, pos + 1, SEEK_SET); // Skip the newline character.
+    } else {
+        lseek(fd, 0, SEEK_SET); // Move to the beginning of the file.
+    }
+
+    // Output the lines from the current position to the end of the file.
     char buffer[1024];
-    while (fgets(buffer, sizeof(buffer), file)) {
+    ssize_t bytes_read;
+    while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[bytes_read] = '\0'; // Null-terminate the string.
         printf("%s", buffer);
     }
 
-    fclose(file);
+    close(fd); // Close the file descriptor.
     return 0;
 }
 
